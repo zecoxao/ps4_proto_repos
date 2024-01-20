@@ -97,7 +97,7 @@ int khax(struct thread* td, uint64_t* uap) {
 
 
 	uint8_t* kernel_ptr = (uint8_t*)0xFFFFFFFF82200000;
-	void* got_prison0 = (void**)0xFFFFFFFF82C58BF0;
+	void* got_prison0 = (void*)0xFFFFFFFF82C58BF0;
 	void** got_rootvnode = (void**)0xFFFFFFFF82FF8710;
 
 	cred->cr_uid = 0;
