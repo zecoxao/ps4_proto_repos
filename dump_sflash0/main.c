@@ -86,104 +86,104 @@ static inline __attribute__((always_inline)) void writeCr0(uint64_t cr0)
 }
 
 int khax(struct thread* td, uint64_t* uap) {
-    size_t(*kprintf)(const char* fmt, ...) = (void*)0xFFFFFFFF824CE1A0ULL;
-    kprintf("entering kthread\n");
+	size_t(*kprintf)(const char* fmt, ...) = (void*)0xFFFFFFFF824CE1A0ULL;
+	kprintf("entering kthread\n");
 
-    struct ucred* cred;
-    struct filedesc* fd;
+	struct ucred* cred;
+	struct filedesc* fd;
 
-    fd = td->td_proc->p_fd;
-    cred = td->td_proc->p_ucred;
-
-
-    uint8_t* kernel_ptr = (uint8_t*)0xFFFFFFFF82200000;
-    void** got_prison0 = (void**)0xFFFFFFFF82C58BF0;
-    void** got_rootvnode = (void**)0xFFFFFFFF82FF8710;
-
-    cred->cr_uid = 0;
-    cred->cr_ruid = 0;
-    cred->cr_rgid = 0;
-    cred->cr_groups[0] = 0;
-
-    cred->cr_prison = *got_prison0;
-    fd->fd_rdir = fd->fd_jdir = *got_rootvnode;
-
-    // escalate ucred privs, needed for access to the filesystem ie* mounting & decrypting files
-    void *td_ucred = *(void **)(((char *)td) + 304); // p_ucred == td_ucred
-
-                                                     // sceSblACMgrIsSystemUcred
-    uint64_t *sonyCred = (uint64_t *)(((char *)td_ucred) + 96);
-    *sonyCred = 0xffffffffffffffff;
-
-    // sceSblACMgrGetDeviceAccessType
-    uint64_t *sceProcType = (uint64_t *)(((char *)td_ucred) + 88);
-    *sceProcType = 0x3801000000000013; // Max access
-
-                                       // sceSblACMgrHasSceProcessCapability
-    uint64_t *sceProcCap = (uint64_t *)(((char *)td_ucred) + 104);
-    *sceProcCap = 0xffffffffffffffff; // Sce Process
+	fd = td->td_proc->p_fd;
+	cred = td->td_proc->p_ucred;
 
 
-    
+	uint8_t* kernel_ptr = (uint8_t*)0xFFFFFFFF82200000;
+	void* got_prison0 = (void**)0xFFFFFFFF82C58BF0;
+	void** got_rootvnode = (void**)0xFFFFFFFF82FF8710;
 
-    kprintf("return to userland\n");
+	cred->cr_uid = 0;
+	cred->cr_ruid = 0;
+	cred->cr_rgid = 0;
+	cred->cr_groups[0] = 0;
 
-    return 0;
+	cred->cr_prison = got_prison0;
+	fd->fd_rdir = fd->fd_jdir = *got_rootvnode;
+
+	// escalate ucred privs, needed for access to the filesystem ie* mounting & decrypting files
+	void *td_ucred = *(void **)(((char *)td) + 304); // p_ucred == td_ucred
+
+													 // sceSblACMgrIsSystemUcred
+	uint64_t *sonyCred = (uint64_t *)(((char *)td_ucred) + 96);
+	*sonyCred = 0xffffffffffffffff;
+
+	// sceSblACMgrGetDeviceAccessType
+	uint64_t *sceProcType = (uint64_t *)(((char *)td_ucred) + 88);
+	*sceProcType = 0x3801000000000013; // Max access
+
+									   // sceSblACMgrHasSceProcessCapability
+	uint64_t *sceProcCap = (uint64_t *)(((char *)td_ucred) + 104);
+	*sceProcCap = 0xffffffffffffffff; // Sce Process
+
+
+
+
+	kprintf("return to userland\n");
+
+	return 0;
 }
 
 /* Main entry point of program*/
 SceInt32 main(int argc, const char *const argv[])
 {
-	
+
 
 	printf("getuid:%08X\n", getuid());
 
 	printf("getpid:%08X\n", getpid());
-	
+
 	syscall(11, khax);
-	
+
 	printf("rechecking getuid:%08X\n", getuid());
 
 	printf("rechecking getpid:%08X\n", getpid());
-	
-	if(getuid()==0){
+
+	if (getuid() == 0) {
 		printf("Successfully jailbroken!\n");
 	}
-	
-	ssize_t nrd; 
-    int fd; 
-    int fd1; 
 
-    char buffer[0x200]; 
+	ssize_t nrd;
+	int fd;
+	int fd1;
 
-    fd = open("/dev/sflash0", O_RDONLY, 0);
-    printf("open %08X\n",fd);
-    fd1 = open("/data/sflash0",  O_WRONLY | O_CREAT | O_TRUNC,  0777);
-    printf("open1 %08X\n",fd1);
-    
+	char buffer[0x200];
+
+	fd = open("/dev/sflash0", O_RDONLY, 0);
+	printf("open %08X\n", fd);
+	fd1 = open("/data/sflash0", O_WRONLY | O_CREAT | O_TRUNC, 0777);
+	printf("open1 %08X\n", fd1);
+
 	//0x10000
-	
-	int i=0;
-	
-	for(i=0;i<0x10000;i++){
-		if(i%0x1000 == 0){
-			printf("%08X\n",i);
+
+	int i = 0;
+
+	for (i = 0; i<0x10000; i++) {
+		if (i % 0x1000 == 0) {
+			printf("%08X\n", i);
 		}
-		nrd = read(fd,buffer,0x200);
-		if(nrd<0){
-			printf("read error:%s\n",strerror(errno));
+		nrd = read(fd, buffer, 0x200);
+		if (nrd<0) {
+			printf("read error:%s\n", strerror(errno));
 		}
-		int written = write(fd1,buffer,nrd);
-		if(written<0){
-			printf("write error:%s\n",strerror(errno));
+		int written = write(fd1, buffer, nrd);
+		if (written<0) {
+			printf("write error:%s\n", strerror(errno));
 		}
 	}
-   
-    close(fd); 
-    printf("close\n");
-    close(fd1);
-    printf("close1\n");
 
-	
+	close(fd);
+	printf("close\n");
+	close(fd1);
+	printf("close1\n");
+
+
 	return 0;
 }

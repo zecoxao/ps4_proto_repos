@@ -86,49 +86,49 @@ static inline __attribute__((always_inline)) void writeCr0(uint64_t cr0)
 }
 
 int khax(struct thread* td, uint64_t* uap) {
-    size_t(*kprintf)(const char* fmt, ...) = (void*)0xFFFFFFFF824CE1A0ULL;
-    kprintf("entering kthread\n");
+	size_t(*kprintf)(const char* fmt, ...) = (void*)0xFFFFFFFF824CE1A0ULL;
+	kprintf("entering kthread\n");
 
-    struct ucred* cred;
-    struct filedesc* fd;
+	struct ucred* cred;
+	struct filedesc* fd;
 
-    fd = td->td_proc->p_fd;
-    cred = td->td_proc->p_ucred;
-
-
-    uint8_t* kernel_ptr = (uint8_t*)0xFFFFFFFF82200000;
-    void** got_prison0 = (void**)0xFFFFFFFF82C58BF0;
-    void** got_rootvnode = (void**)0xFFFFFFFF82FF8710;
-
-    cred->cr_uid = 0;
-    cred->cr_ruid = 0;
-    cred->cr_rgid = 0;
-    cred->cr_groups[0] = 0;
-
-    cred->cr_prison = *got_prison0;
-    fd->fd_rdir = fd->fd_jdir = *got_rootvnode;
-
-    // escalate ucred privs, needed for access to the filesystem ie* mounting & decrypting files
-    void *td_ucred = *(void **)(((char *)td) + 304); // p_ucred == td_ucred
-
-                                                     // sceSblACMgrIsSystemUcred
-    uint64_t *sonyCred = (uint64_t *)(((char *)td_ucred) + 96);
-    *sonyCred = 0xffffffffffffffff;
-
-    // sceSblACMgrGetDeviceAccessType
-    uint64_t *sceProcType = (uint64_t *)(((char *)td_ucred) + 88);
-    *sceProcType = 0x3801000000000013; // Max access
-
-                                       // sceSblACMgrHasSceProcessCapability
-    uint64_t *sceProcCap = (uint64_t *)(((char *)td_ucred) + 104);
-    *sceProcCap = 0xffffffffffffffff; // Sce Process
+	fd = td->td_proc->p_fd;
+	cred = td->td_proc->p_ucred;
 
 
-    
+	uint8_t* kernel_ptr = (uint8_t*)0xFFFFFFFF82200000;
+	void* got_prison0 = (void**)0xFFFFFFFF82C58BF0;
+	void** got_rootvnode = (void**)0xFFFFFFFF82FF8710;
 
-    kprintf("return to userland\n");
+	cred->cr_uid = 0;
+	cred->cr_ruid = 0;
+	cred->cr_rgid = 0;
+	cred->cr_groups[0] = 0;
 
-    return 0;
+	cred->cr_prison = got_prison0;
+	fd->fd_rdir = fd->fd_jdir = *got_rootvnode;
+
+	// escalate ucred privs, needed for access to the filesystem ie* mounting & decrypting files
+	void *td_ucred = *(void **)(((char *)td) + 304); // p_ucred == td_ucred
+
+													 // sceSblACMgrIsSystemUcred
+	uint64_t *sonyCred = (uint64_t *)(((char *)td_ucred) + 96);
+	*sonyCred = 0xffffffffffffffff;
+
+	// sceSblACMgrGetDeviceAccessType
+	uint64_t *sceProcType = (uint64_t *)(((char *)td_ucred) + 88);
+	*sceProcType = 0x3801000000000013; // Max access
+
+									   // sceSblACMgrHasSceProcessCapability
+	uint64_t *sceProcCap = (uint64_t *)(((char *)td_ucred) + 104);
+	*sceProcCap = 0xffffffffffffffff; // Sce Process
+
+
+
+
+	kprintf("return to userland\n");
+
+	return 0;
 }
 
 /* Main entry point of program*/
