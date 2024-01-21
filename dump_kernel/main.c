@@ -206,5 +206,20 @@ SceInt32 main(int argc, const char *const argv[])
 	
 	sceNetSocketClose(g_debugSocket);
 	
+	int fd = open( "/data/kernel.bin", O_WRONLY | O_CREAT | O_TRUNC, 0777 );
+    if ( fd < 0 )
+    {
+        printf( "failed to open kernel.bin inside /data/ : %08X", fd );
+        return -1;
+    }
+
+    int ret = write( fd, dump, 0x2200000 );
+    if ( ret < 0 )
+    {
+        printf("Failed to write\n");
+    }
+
+    close( fd );
+	
 
 }
