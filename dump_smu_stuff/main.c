@@ -12,20 +12,21 @@
 
 
 int khax(struct thread* td, uint64_t* uap) {
-    size_t(*kprintf)(const char* fmt, ...) = (void*)0xFFFFFFFF824D66E0ULL;
-    uint32_t(*CailGetSmcIndReg) (uint32_t unk, uint32_t index) = (void*)0xFFFFFFFF826CA600ULL;
+    size_t(*kprintf)(const char* fmt, ...) = (void*)0xFFFFFFFF824CE1A0ULL;
+    uint32_t(*readl) (uint32_t unk, uint32_t index) = (void*)0xFFFFFFFF826C32E0ULL;
+    uint32_t(*writel) (uint32_t unk, uint32_t index, uint32_t val) = (void*)0xFFFFFFFF826C3300ULL;
 
 	kprintf("first test\n");
 
     uint32_t i = 0;
     for (i = 0xC010702C; i < 0xC010722C; i = i + 4) {
-        kprintf("%08X\n", CailGetSmcIndReg(0, i));
+        kprintf("%08X\n", readl(0, i));
     }
 
     kprintf("second test\n");
 
     for (i = 0; i < 0x40000; i = i + 4) {
-        kprintf("%08X\n", CailGetSmcIndReg(0, i));
+        kprintf("%08X\n", readl(0, i));
     }
 
     return 0;
