@@ -72,7 +72,7 @@ int kpayload(struct thread *td, struct kpayload_args* args) {
 
 	//Resolve kernel functions...
 	
-
+	printfkernel("resolve kernel funcs\n");
 	cred->cr_uid = 0;
 	cred->cr_ruid = 0;
 	cred->cr_rgid = 0;
@@ -81,12 +81,9 @@ int kpayload(struct thread *td, struct kpayload_args* args) {
 	cred->cr_prison = got_prison0;
 	fd->fd_rdir = fd->fd_jdir = *got_rootvnode;
 
-	//Disable write protection...
-	uint64_t cr0 = readCr0();
-	writeCr0(cr0 & ~X86_CR0_WP);
-
 	//Kexec init
-	void *DT_HASH_SEGMENT = (void *)(0xFFFFFFFF82F06D88);
+	printfkernel("kexec init\n");
+	void *DT_HASH_SEGMENT = (void *)(0xffffffff82200160);
 	memcpy(DT_HASH_SEGMENT, kexec, kexec_size);
 
 	void(*kexec_init)(void *, void *) = DT_HASH_SEGMENT;
@@ -94,7 +91,7 @@ int kpayload(struct thread *td, struct kpayload_args* args) {
 	kexec_init((void *)(0xFFFFFFFF824CE1A0ULL), NULL);
 
 	// Say hello and put the kernel base in userland to we can use later
-	printfkernel("PS4 Linux Loader for 4.05\n");
+	printfkernel("PS4 Linux Loader for 0.920.030\n");
 
 	printfkernel("kernel base is:0x%016llx\n", 0xFFFFFFFF82200000ULL);
 
